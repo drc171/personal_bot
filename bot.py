@@ -43,12 +43,28 @@ SYSTEM = """Ты — семейный ИИ-ассистент.
 Будь дружелюбным, конкретным и кратким."""
 
 
+GREETINGS = {
+    979032659: "Привет, Константин! Готов помочь. Пиши что нужно.",
+    7949309805: (
+        "Привет, Eva! 👋\n"
+        "Я ИИ-ассистент, которого папа настроил для семьи.\n"
+        "Спрашивай что угодно — помогу с учёбой, переводом, идеями или просто поболтаем.\n"
+        "Пиши на любом языке — отвечу на том же."
+    ),
+    8643765516: (
+        "Привет, Juna! 👋\n"
+        "Я ИИ-ассистент, которого папа настроил для семьи.\n"
+        "Спрашивай что угодно — помогу с учёбой, переводом, идеями или просто поболтаем.\n"
+        "Пиши на любом языке — отвечу на том же."
+    ),
+}
+
+
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in ALLOWED_USERS:
         return
-    name = ALLOWED_USERS[user_id]
-    await update.message.reply_text(f"Привет, {name}! Готов помочь. Пиши что нужно.")
+    await update.message.reply_text(GREETINGS[user_id])
 
 
 async def reset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
