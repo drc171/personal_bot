@@ -18,8 +18,8 @@ install("python-telegram-bot", "telegram")
 import os
 
 # ─── НАСТРОЙКИ (задаются через переменные окружения в Railway) ─────────────────
-BOT_TOKEN     = os.environ["BOT_TOKEN"]
-ANTHROPIC_KEY = os.environ["ANTHROPIC_KEY"]
+BOT_TOKEN     = os.environ["BOT_TOKEN"].strip()
+ANTHROPIC_KEY = os.environ["ANTHROPIC_KEY"].strip()
 
 # Кто может пользоваться ботом (telegram_id)
 ALLOWED_USERS = {
