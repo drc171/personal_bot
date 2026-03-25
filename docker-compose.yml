@@ -1,0 +1,75 @@
+services:
+  personal-bot:
+    build: ./personal_bot
+    container_name: personal-bot
+    restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - BOT_TOKEN=${PERSONAL_BOT_TOKEN}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+    volumes:
+      - personal_bot_data:/data
+
+  family-bot:
+    build: ./family_bot
+    container_name: family-bot
+    restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - BOT_TOKEN=${FAMILY_BOT_TOKEN}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+
+  tender-bot:
+    build: ./tender_bot
+    container_name: tender-bot
+    restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - BOT_TOKEN=${TENDER_BOT_TOKEN}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - PORT=3000
+
+  concurent-bot:
+    build: ./concurent_bot
+    container_name: concurent-bot
+    restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - BOT_TOKEN=${CONCURENT_BOT_TOKEN}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - PORT=3000
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://n8n:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  personal_bot_data:
+  n8n_data:

@@ -14,11 +14,9 @@ def install(pkg, import_name=None):
 
 install("anthropic")
 install("python-telegram-bot", "telegram")
-install("apscheduler")
-
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dtime
 from pathlib import Path
 
 # ─── НАСТРОЙКИ ─────────────────────────────────────────────────────────────────
@@ -43,8 +41,6 @@ from telegram.ext import (
     ApplicationBuilder, MessageHandler, CommandHandler,
     filters, ContextTypes, ConversationHandler,
 )
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 import pytz
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
@@ -331,7 +327,7 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ─── SCHEDULED JOBS ────────────────────────────────────────────────────────────
 
-async def trigger_questions(app):
+async def trigger_questions(ctx: ContextTypes.DEFAULT_TYPE):
     """16:10 — начать опрос."""
     diary_sessions[BOSS_ID] = {"step": 0, "answers": []}
     text = (
@@ -339,10 +335,10 @@ async def trigger_questions(app):
         "Не забудь скинуть сводку из Claude Code через /add\n\n"
         + QUESTIONS[0]
     )
-    await app.bot.send_message(chat_id=BOSS_ID, text=text)
+    await ctx.bot.send_message(chat_id=BOSS_ID, text=text)
 
 
-async def trigger_summary(app):
+async def trigger_summary(ctx: ContextTypes.DEFAULT_TYPE):
     """16:30 — показать итог дня."""
     y_key = yesterday_key()
     t_key = today_key()
@@ -372,7 +368,7 @@ async def trigger_summary(app):
 
     parts.append("\nДобавить планы на завтра: /tomorrow <текст>")
 
-    await app.bot.send_message(chat_id=BOSS_ID, text="\n".join(parts))
+    await ctx.bot.send_message(chat_id=BOSS_ID, text="\n".join(parts))
 
 
 # ─── MAIN ──────────────────────────────────────────────────────────────────────
@@ -392,12 +388,11 @@ def main():
     app.add_handler(CommandHandler("tomorrow", diary_tomorrow))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Планировщик
+    # Планировщик через встроенный JobQueue
     tz = pytz.timezone(TIMEZONE)
-    scheduler = AsyncIOScheduler(timezone=tz)
-    scheduler.add_job(trigger_questions, CronTrigger(hour=16, minute=10, timezone=tz), args=[app])
-    scheduler.add_job(trigger_summary, CronTrigger(hour=16, minute=30, timezone=tz), args=[app])
-    scheduler.start()
+    jq = app.job_queue
+    jq.run_daily(trigger_questions, time=dtime(hour=16, minute=10, tzinfo=tz))
+    jq.run_daily(trigger_summary, time=dtime(hour=16, minute=30, tzinfo=tz))
     print("Scheduler: 16:10 вопросы, 16:30 сводка")
 
     app.run_polling()
